@@ -210,7 +210,6 @@ void SpecialPowerStore::parseSpecialPowerDefinition( INI *ini )
 	{ "ViewObjectRange",					INI::parseReal,										NULL,	offsetof( SpecialPowerTemplate, m_viewObjectRange ) },
 	{ "RadiusCursorRadius",				INI::parseReal,										NULL,	offsetof( SpecialPowerTemplate, m_radiusCursorRadius ) },
 	{ "ShortcutPower",						INI::parseBool,										NULL, offsetof( SpecialPowerTemplate, m_shortcutPower ) },
-	{ "AIFiresWhenReady",					INI::parseBool,										NULL, offsetof( SpecialPowerTemplate, m_aiFiresWhenReady ) },
 	{ "AcademyClassify",					INI::parseIndexList,			TheAcademyClassificationTypeNames, offsetof( SpecialPowerTemplate, m_academyClassificationType ) },
 	{ NULL,	NULL, NULL,	0 }  // keep this last
 
@@ -231,7 +230,6 @@ SpecialPowerTemplate::SpecialPowerTemplate()
 	m_viewObjectRange = 0;
 	m_radiusCursorRadius = 0;
 	m_shortcutPower = FALSE;
-	m_aiFiresWhenReady = FALSE;
 
 }  // end SpecialPowerTemplate
 

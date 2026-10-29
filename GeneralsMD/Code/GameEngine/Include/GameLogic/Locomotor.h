@@ -351,9 +351,6 @@ public:
 	/// the tightest circle a ground vehicle on wheels drives at speed, from its length
 	Real calcWheelTurnRadius(const Object* obj) const;
 
-	/// the owner's SpeedScale: Turkiye's reskins drive on the American locomotors at their own pace
-	inline void setSpeedScale(Real scale) { m_speedScale = scale; }
-
 	/// this is handy for doing things like forcing helicopters to crash realistically: cut their lift.
 	inline void setMaxLift(Real lift) { m_maxLift = lift; }
 	inline void setMaxSpeed(Real speed) 
@@ -530,8 +527,7 @@ private:
 	Real				m_brakingFactor;
 	Real				m_maxLift;
 	Real				m_maxSpeed;
-	Real				m_speedFactor;
-	Real				m_speedScale;			///< multiplies the template's speeds; 1 unless the owner's template sets SpeedScale
+	Real				m_speedFactor;			///< the owner's rank bonus on the template's speed
 	Real				m_maxAccel;
 	Real				m_maxBraking;
 	Real				m_maxTurnRate;

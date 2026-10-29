@@ -387,7 +387,6 @@ TEST(rank_ladder_every_aura_given_has_a_ring)
 	struct Side { const char *name; RankLadder ladder; } sides[] =
 	{
 		{ "America", america() }, { "China", china() }, { "GLA", gla() },
-		{ "Turkiye", makeLadder( 21, 4, 11, 16, 16, 1.42f, 1.19f, 1.42f ) },
 	};
 	for( Side &side : sides )
 	{
@@ -443,7 +442,6 @@ TEST(rank_ladder_drill_caps_below_the_grade_that_gives_it)
 	struct Side { const char *name; RankLadder ladder; } sides[] =
 	{
 		{ "America", america() }, { "China", china() }, { "GLA", gla() },
-		{ "Turkiye", makeLadder( 21, 4, 11, 16, 16, 1.42f, 1.19f, 1.42f ) },
 	};
 	for( Side &side : sides )
 	{
@@ -459,7 +457,6 @@ TEST(rank_ladder_no_aura_below_the_elite_pin)
 	struct Side { const char *name; RankLadder ladder; } sides[] =
 	{
 		{ "America", america() }, { "China", china() }, { "GLA", gla() },
-		{ "Turkiye", makeLadder( 21, 4, 11, 16, 16, 1.42f, 1.19f, 1.42f ) },
 	};
 	for( Side &side : sides )
 	{

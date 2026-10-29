@@ -306,7 +306,6 @@ Object::Object( const ThingTemplate *tt, const ObjectStatusMaskType &objectStatu
 	if( m_shroudClearingRange == -1.0f )
 		m_shroudClearingRange = m_visionRange;// Backwards compatible, and perfectly logical default to assign
 	m_shroudRange = 0.0f;
-	m_sightJammerCount = 0;
 	for( Int aura = 0; aura < RANK_AURA_COUNT; ++aura )
 		m_rankAura[ aura ] = 0.0f;
 	m_rankRallyUntil = 0;
@@ -4556,7 +4555,6 @@ static void xferModule( Xfer *xfer, BehaviorModule *module, const Object *obj )
 	* 10: each player's memory of it while it is out of their sight
 	* 11: the cached angle, which the matrix does not give back bit for bit
 	* 12: the last threat and value sightings
-	* 13: how many enemy jammers are cutting its sight
 	* 14: the rank auras on it and when its death rally ends
 	* 15: the six aura kinds mend, pace, drill, steady, capture and spoils
 	*/
@@ -5025,9 +5023,6 @@ void Object::xfer( Xfer *xfer )
 					m_partitionLastValue->m_howFar, m_partitionLastValue->m_data, m_partitionLastValue->m_forWhom );
 		}
 	}
-
-	if( version >= 13 )
-		xfer->xferInt( &m_sightJammerCount );
 
 	// version 14 saved five kinds, the four before MEND and RALLY
 	if( version >= 15 )
@@ -5565,26 +5560,7 @@ void Object::removeThreat()
 	m_partitionLastThreat->reset();
 }
 
-//-------------------------------------------------------------------------------------------------
-/** A jammed drone or spotter still sees what is under its feet, and nothing a battery could use. */
-//-------------------------------------------------------------------------------------------------
-static const Real JAMMED_SHROUD_CLEARING_RANGE = 30.0f;
 
-void Object::addSightJammer()
-{
-	++m_sightJammerCount;
-	if( m_sightJammerCount == 1 )
-		handleShroud();
-}
-
-//-------------------------------------------------------------------------------------------------
-void Object::removeSightJammer()
-{
-	DEBUG_ASSERTCRASH( m_sightJammerCount > 0, ("removeSightJammer on '%s' with no jammer on it", getTemplate()->getName().str()) );
-	--m_sightJammerCount;
-	if( m_sightJammerCount == 0 )
-		handleShroud();
-}
 
 //-------------------------------------------------------------------------------------------------
 Real Object::getRankPerk( RankPerk perk ) const
@@ -5757,8 +5733,6 @@ void Object::look()
 				shroudClearingRange = Object_armedShroudClearingRange( shroudClearingRange, getLargestWeaponRange() );
 			// a rank's eyes and a leader's sight aura reach past the weapon cap; onRankSightChanged looks again
 			shroudClearingRange *= getRankSightScalar();
-			if( isSightJammed() )
-				shroudClearingRange = min( shroudClearingRange, JAMMED_SHROUD_CLEARING_RANGE );
 
 			if( shroudClearingRange > 0.0f )
 			{

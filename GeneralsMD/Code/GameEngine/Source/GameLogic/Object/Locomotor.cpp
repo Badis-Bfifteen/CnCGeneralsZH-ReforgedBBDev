@@ -812,7 +812,6 @@ Locomotor::Locomotor(const LocomotorTemplate* tmpl)
 	m_maxLift = BIGNUM;
 	m_maxSpeed = BIGNUM;
 	m_speedFactor = 1.0f;
-	m_speedScale = 1.0f;
 	m_maxAccel = BIGNUM;
 	m_maxBraking = BIGNUM;
 	m_maxTurnRate = BIGNUM;
@@ -853,7 +852,6 @@ Locomotor::Locomotor(const Locomotor& that)
 	m_maxLift = that.m_maxLift;
 	m_maxSpeed = that.m_maxSpeed;
 	m_speedFactor = that.m_speedFactor;
-	m_speedScale = that.m_speedScale;
 	m_maxAccel = that.m_maxAccel;
 	m_maxBraking = that.m_maxBraking;
 	m_maxTurnRate = that.m_maxTurnRate;
@@ -885,7 +883,6 @@ Locomotor& Locomotor::operator=(const Locomotor& that)
 		m_maxLift = that.m_maxLift;
 		m_maxSpeed = that.m_maxSpeed;
 		m_speedFactor = that.m_speedFactor;
-		m_speedScale = that.m_speedScale;
 		m_maxAccel = that.m_maxAccel;
 		m_maxBraking = that.m_maxBraking;
 		m_maxTurnRate = that.m_maxTurnRate;
@@ -927,13 +924,12 @@ void Locomotor::crc( Xfer *xfer )
 	* 3: m_diveDistance
 	* 4: m_yawRate, m_driveAccelX, m_driveAccelY
 	* 5: m_driveSpeed, m_driveFrame
-	* 6: m_speedFactor
-	* 7: m_speedScale */
+	* 6: m_speedFactor */
 // ------------------------------------------------------------------------------------------------
 void Locomotor::xfer( Xfer *xfer )
 {
 	// version
-	const XferVersion currentVersion = 7;
+	const XferVersion currentVersion = 6;
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
 
@@ -977,9 +973,6 @@ void Locomotor::xfer( Xfer *xfer )
 	if (version >= 6)
 		xfer->xferReal(&m_speedFactor);
 
-	if (version >= 7)
-		xfer->xferReal(&m_speedScale);
-
 }  // end xfer
 
 // ------------------------------------------------------------------------------------------------
@@ -1006,7 +999,6 @@ Real Locomotor::getMaxSpeedForCondition(BodyDamageType condition) const
 		speed = m_template->m_maxSpeed;
 	else
 		speed = m_template->m_maxSpeedDamaged;
-	speed *= m_speedScale;
 
 	speed *= m_speedFactor;
 	if (speed > m_maxSpeed)
@@ -4038,13 +4030,6 @@ void LocomotorSet::clear()
 	m_locomotors.clear();
 	m_validLocomotorSurfaces = 0;
 	m_downhillOnly = FALSE;
-}
-
-//-------------------------------------------------------------------------------------------------
-void LocomotorSet::setSpeedScale(Real scale)
-{
-	for (int i = 0; i < m_locomotors.size(); ++i)
-		m_locomotors[i]->setSpeedScale(scale);
 }
 
 //-------------------------------------------------------------------------------------------------

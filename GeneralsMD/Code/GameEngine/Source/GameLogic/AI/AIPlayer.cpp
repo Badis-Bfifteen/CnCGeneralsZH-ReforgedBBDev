@@ -5677,7 +5677,6 @@ void AIPlayer::update( void )
 		AI_PHASE( AIP_POWER,   doPower() );							// Keep the lights on, and out of reach.
 		AI_PHASE( AIP_ECONOMY, doSuperweapons() );			// The big guns, as soon as they can be bought.
 		AI_PHASE( AIP_TACTICS, doParticleBeams() );			// ... and the Particle Cannon's beam driven across his base.
-		AI_PHASE( AIP_ECONOMY, doReadySpecialPowers() );	// The powers no script knows to fire, as soon as they are ready.
 		AI_PHASE( AIP_WAVE,    rememberEnemies() );			// Write down the enemy army in sight.
 		AI_PHASE( AIP_WAVE,    answerArmy() );					// Train the answer to the part of it nothing answers.
 		AI_PHASE( AIP_WAVE,    doMass() );							// Build the fist, and send it when it is one.
@@ -8013,51 +8012,6 @@ Bool AIPlayer::buyUpgrade( ProductionUpdateInterface *pu, const UpgradeTemplate 
 static void collectObjects( Object *obj, void *userData )
 {
 	((std::vector<Object*> *)userData)->push_back( obj );
-}
-
-//----------------------------------------------------------------------------------------------------------
-/** The skirmish scripts fire the powers they name and nothing else, so a side that runs another
-	* side's scripts (Turkiye runs America's) never touched its own.  A power marked AIFiresWhenReady goes
-	* off the moment it is ready and the science behind it is bought, at the target the scripts' own
-	* "fire at most cost" would pick. */
-//----------------------------------------------------------------------------------------------------------
-static const Int SPECIAL_POWER_CHECK_RATE = 2 * LOGICFRAMES_PER_SECOND;
-
-void AIPlayer::doReadySpecialPowers( void )
-{
-	const Int phase = computeUpdatePhase( m_player->getPlayerIndex(), SPECIAL_POWER_CHECK_RATE );
-	if( (TheGameLogic->getFrame() + phase) % SPECIAL_POWER_CHECK_RATE != 0 )
-		return;
-	Player *enemy = getAiEnemy();
-	if( enemy == NULL )
-		return;
-
-	std::vector<Object*> owned;
-	m_player->iterateObjects( collectObjects, &owned );
-	for( std::vector<Object*>::iterator it = owned.begin(); it != owned.end(); ++it )
-	{
-		Object *obj = *it;
-		if( obj->isEffectivelyDead() || obj->isDisabled() )
-			continue;
-		for( BehaviorModule **m = obj->getBehaviorModules(); *m; ++m )
-		{
-			SpecialPowerModuleInterface *power = (*m)->getSpecialPower();
-			if( power == NULL || !power->getSpecialPowerTemplate()->isFiredByAIWhenReady() || !power->isReady() )
-				continue;
-			const ScienceType science = power->getRequiredScience();
-			if( science != SCIENCE_INVALID && !m_player->hasScience( science ) )
-				continue;
-
-			const SpecialPowerTemplate *tmpl = power->getSpecialPowerTemplate();
-			const Real radius = max( 50.0f, tmpl->getRadiusCursorRadius() );
-			Coord3D target;
-			if( !m_player->computeSuperweaponTarget( tmpl, &target, enemy->getPlayerIndex(), radius ) || target.lengthSqr() <= 0.0f )
-				continue;
-			DEBUG_LOG(("AI POWER frame %d player %d fires '%s' at (%.0f,%.0f)\n", TheGameLogic->getFrame(),
-				m_player->getPlayerIndex(), tmpl->getName().str(), target.x, target.y));
-			power->doSpecialPowerAtLocation( &target, INVALID_ANGLE, COMMAND_FIRED_BY_SCRIPT );
-		}
-	}
 }
 
 //----------------------------------------------------------------------------------------------------------

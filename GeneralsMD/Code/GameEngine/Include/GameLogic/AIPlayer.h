@@ -401,9 +401,6 @@ protected:
 	AIPurchaseQueue	m_purchases;
 	AsciiString			m_purchaseSavingFor;	///< the reserved item's name, for the log only
 
-	/** Fire every ready special power whose template says AIFiresWhenReady, once its science is bought. */
-	void doReadySpecialPowers(void);
-
 	Bool enemyDirection(Coord3D *dir);	///< unit vector from this base towards the nearest enemy's best known address
 	Bool isHeldExpansion(const Object *warehouse);	///< our supply center stands at it, and it is nearer our base than any enemy's
 	Bool isOurSideOfMap(const Coord3D *pos);	///< no nearer any living enemy's base than ours

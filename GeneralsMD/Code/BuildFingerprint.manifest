@@ -37,35 +37,10 @@ Data/Art/Textures/ReforgedRankBar.tga
 Data/Art/Textures/ReforgedRankSkull.tga
 Data/Art/Textures/ReforgedRanksChina.tga
 Data/Art/Textures/ReforgedRanksGLA.tga
-Data/Art/Textures/ReforgedRanksTurkiye.tga
 Data/Art/Textures/ReforgedRanksUSA.tga
 Data/Art/Textures/ReforgedSignalAttack.tga
 Data/Art/Textures/ReforgedSignalDefend.tga
 Data/Art/Textures/ReforgedSignalLook.tga
-Data/Art/Textures/ZHCA_TRMehmet.tga
-Data/Art/W3D/TRMEHM_AA2AC.W3D
-Data/Art/W3D/TRMEHM_AA2SA.W3D
-Data/Art/W3D/TRMEHM_ATA.W3D
-Data/Art/W3D/TRMEHM_ATC.W3D
-Data/Art/W3D/TRMEHM_ATCED.W3D
-Data/Art/W3D/TRMEHM_ATCST.W3D
-Data/Art/W3D/TRMEHM_CHA.W3D
-Data/Art/W3D/TRMEHM_DTA.W3D
-Data/Art/W3D/TRMEHM_DTB.W3D
-Data/Art/W3D/TRMEHM_DTE1.W3D
-Data/Art/W3D/TRMEHM_DTE2.W3D
-Data/Art/W3D/TRMEHM_DTE3.W3D
-Data/Art/W3D/TRMEHM_IDA.W3D
-Data/Art/W3D/TRMEHM_IDB.W3D
-Data/Art/W3D/TRMEHM_IDC.W3D
-Data/Art/W3D/TRMEHM_RNA.W3D
-Data/Art/W3D/TRMEHM_RNB.W3D
-Data/Art/W3D/TRMEHM_S2SB.W3D
-Data/Art/W3D/TRMEHM_SA2AA.W3D
-Data/Art/W3D/TRMEHM_SKN.W3D
-Data/Art/W3D/TRMEHM_STA.W3D
-Data/Art/W3D/TRMEHM_STB.W3D
-Data/Art/W3D/TRMEHM_WKA.W3D
 Data/Cinema/aurorablast.txt
 Data/Cinema/aurorafog.txt
 Data/Cinema/blastcheck.txt
@@ -109,7 +84,6 @@ Data/Cinema/jetfilm_passwide.txt
 Data/Cinema/jetfilm_runway.txt
 Data/Cinema/jetfilm_sturn.txt
 Data/Cinema/jetfilm_turn.txt
-Data/Cinema/kargu_dive.txt
 Data/Cinema/looks4.txt
 Data/Cinema/looks4amber.txt
 Data/Cinema/lsv_burst.txt
@@ -231,7 +205,6 @@ Data/INI/MappedImages/HandCreated/ReforgedLobbySpot.ini
 Data/INI/MappedImages/HandCreated/ReforgedRankInsignia.ini
 Data/INI/MappedImages/HandCreated/ReforgedRanksChina.ini
 Data/INI/MappedImages/HandCreated/ReforgedRanksGLA.ini
-Data/INI/MappedImages/HandCreated/ReforgedRanksTurkiye.ini
 Data/INI/MappedImages/HandCreated/ReforgedRanksUSA.ini
 Data/INI/ModernWater.ini
 Data/INI/ObjectCreationListReforged.ini
@@ -240,8 +213,6 @@ Data/INI/PlayerTemplateReforged.ini
 Data/INI/ScienceReforged.ini
 Data/INI/SpecialPowerReforged.ini
 Data/INI/SpeechReforged.ini
-Data/INI/TurkiyeReforged.ini
-Data/INI/TurkiyeWeaponReforged.ini
 Data/INI/UpgradeReforged.ini
 Data/INI/VideoReforged.ini
 Data/INI/WeaponReforged.ini
@@ -265,7 +236,6 @@ Data/Scenarios/blastcheck.txt
 Data/Scenarios/bridgecross.txt
 Data/Scenarios/bridgelong.txt
 Data/Scenarios/broadcastend.txt
-Data/Scenarios/capturedbuild.txt
 Data/Scenarios/cargocrash.txt
 Data/Scenarios/chokeprobe.txt
 Data/Scenarios/comanchehill.txt
@@ -330,7 +300,6 @@ Data/Scenarios/jetpass.txt
 Data/Scenarios/jetrunway.txt
 Data/Scenarios/jetsturn.txt
 Data/Scenarios/jetturn.txt
-Data/Scenarios/kargu.txt
 Data/Scenarios/laserglow.txt
 Data/Scenarios/laserlook.txt
 Data/Scenarios/leadinfantry.txt
@@ -341,7 +310,6 @@ Data/Scenarios/mappers.txt
 Data/Scenarios/mass420x2.txt
 Data/Scenarios/mass840.txt
 Data/Scenarios/massmove.txt
-Data/Scenarios/mehmetcik.txt
 Data/Scenarios/minefx.txt
 Data/Scenarios/minefx_blast.txt
 Data/Scenarios/minefx_desert.txt
@@ -374,11 +342,6 @@ Data/Scenarios/particles100k.txt
 Data/Scenarios/particles1m.txt
 Data/Scenarios/particles1m_mixed.txt
 Data/Scenarios/particles1m_smoke.txt
-Data/Scenarios/rankaura.txt
-Data/Scenarios/rankauramaresal.txt
-Data/Scenarios/rankauranight.txt
-Data/Scenarios/rankaurareplay.txt
-Data/Scenarios/rankaurasnow.txt
 Data/Scenarios/rankaurawiki.txt
 Data/Scenarios/rankladder.txt
 Data/Scenarios/rankringsall.txt
@@ -886,7 +849,6 @@ GameEngine/Include/GameLogic/Module/ImmortalBody.h
 GameEngine/Include/GameLogic/Module/InactiveBody.h
 GameEngine/Include/GameLogic/Module/InstantDeathBehavior.h
 GameEngine/Include/GameLogic/Module/InternetHackContain.h
-GameEngine/Include/GameLogic/Module/JammerUpdate.h
 GameEngine/Include/GameLogic/Module/JetAIUpdate.h
 GameEngine/Include/GameLogic/Module/JetSlowDeathBehavior.h
 GameEngine/Include/GameLogic/Module/KeepObjectDie.h
@@ -937,7 +899,6 @@ GameEngine/Include/GameLogic/Module/ProneUpdate.h
 GameEngine/Include/GameLogic/Module/PropagandaCenterBehavior.h
 GameEngine/Include/GameLogic/Module/PropagandaTowerBehavior.h
 GameEngine/Include/GameLogic/Module/QueueProductionExitUpdate.h
-GameEngine/Include/GameLogic/Module/RadarJamSpecialPower.h
 GameEngine/Include/GameLogic/Module/RadarUpdate.h
 GameEngine/Include/GameLogic/Module/RadarUpgrade.h
 GameEngine/Include/GameLogic/Module/RadiusDecalUpdate.h
@@ -960,7 +921,6 @@ GameEngine/Include/GameLogic/Module/SabotageSupplyCenterCrateCollide.h
 GameEngine/Include/GameLogic/Module/SabotageSupplyDropzoneCrateCollide.h
 GameEngine/Include/GameLogic/Module/SalvageCrateCollide.h
 GameEngine/Include/GameLogic/Module/ShroudCrateCollide.h
-GameEngine/Include/GameLogic/Module/SightUpgrade.h
 GameEngine/Include/GameLogic/Module/SlavedUpdate.h
 GameEngine/Include/GameLogic/Module/SlowDeathBehavior.h
 GameEngine/Include/GameLogic/Module/SmartBombTargetHomingUpdate.h
@@ -995,7 +955,6 @@ GameEngine/Include/GameLogic/Module/SupplyTruckAIUpdate.h
 GameEngine/Include/GameLogic/Module/SupplyWarehouseCreate.h
 GameEngine/Include/GameLogic/Module/SupplyWarehouseCripplingBehavior.h
 GameEngine/Include/GameLogic/Module/SupplyWarehouseDockUpdate.h
-GameEngine/Include/GameLogic/Module/SwarmStrikeSpecialPower.h
 GameEngine/Include/GameLogic/Module/TechBuildingBehavior.h
 GameEngine/Include/GameLogic/Module/TempWeaponBonusHelper.h
 GameEngine/Include/GameLogic/Module/TensileFormationUpdate.h
@@ -1554,11 +1513,9 @@ GameEngine/Source/GameLogic/Object/SpecialPower/DefectorSpecialPower.cpp
 GameEngine/Source/GameLogic/Object/SpecialPower/DemoralizeSpecialPower.cpp
 GameEngine/Source/GameLogic/Object/SpecialPower/FireWeaponPower.cpp
 GameEngine/Source/GameLogic/Object/SpecialPower/OCLSpecialPower.cpp
-GameEngine/Source/GameLogic/Object/SpecialPower/RadarJamSpecialPower.cpp
 GameEngine/Source/GameLogic/Object/SpecialPower/SpecialAbility.cpp
 GameEngine/Source/GameLogic/Object/SpecialPower/SpecialPowerModule.cpp
 GameEngine/Source/GameLogic/Object/SpecialPower/SpyVisionSpecialPower.cpp
-GameEngine/Source/GameLogic/Object/SpecialPower/SwarmStrikeSpecialPower.cpp
 GameEngine/Source/GameLogic/Object/Update/AIUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/AIUpdate/AssaultTransportAIUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/AIUpdate/ChinookAIUpdate.cpp
@@ -1608,7 +1565,6 @@ GameEngine/Source/GameLogic/Object/Update/HelicopterSlowDeathUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/HijackerUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/HordeUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/IdleHackerUpdate.cpp
-GameEngine/Source/GameLogic/Object/Update/JammerUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/LaserUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/LifetimeUpdate.cpp
 GameEngine/Source/GameLogic/Object/Update/MissileLauncherBuildingUpdate.cpp
@@ -1661,7 +1617,6 @@ GameEngine/Source/GameLogic/Object/Upgrade/PassengersFireUpgrade.cpp
 GameEngine/Source/GameLogic/Object/Upgrade/PowerPlantUpgrade.cpp
 GameEngine/Source/GameLogic/Object/Upgrade/RadarUpgrade.cpp
 GameEngine/Source/GameLogic/Object/Upgrade/ReplaceObjectUpgrade.cpp
-GameEngine/Source/GameLogic/Object/Upgrade/SightUpgrade.cpp
 GameEngine/Source/GameLogic/Object/Upgrade/StatusBitsUpgrade.cpp
 GameEngine/Source/GameLogic/Object/Upgrade/StealthUpgrade.cpp
 GameEngine/Source/GameLogic/Object/Upgrade/SubObjectsUpgrade.cpp

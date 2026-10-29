@@ -7525,9 +7525,9 @@ static Bool drawIs( Int pick, Bool oldFactionsOnly, const std::vector<Int> &want
 
 // A seat's Random narrowed to a pool rides in its faction number, which every lobby message, slot
 // string, save and replay already carries, so the pool has to come back out of the number whole and
-// the draw has to be that pool on every machine.  Turkiye's RandomExcluded, read from the shipped
-// master, keeps it out of a plain Random and out of the default pool; a pool can still tick it in.
-TEST(random_pool_round_trips_and_plain_random_leaves_out_turkiye)
+// the draw has to be that pool on every machine.  The excluded faction stays out of a plain Random and
+// out of the default pool; a pool can still tick it in.
+TEST(random_pool_round_trips_and_plain_random_leaves_out_the_excluded_faction)
 {
 	CHECK( bootOnce() );
 	PlayerTemplateStore *savedStore = ThePlayerTemplateStore;
@@ -7537,49 +7537,30 @@ TEST(random_pool_round_trips_and_plain_random_leaves_out_turkiye)
 	ThePlayerTemplateStore = NEW PlayerTemplateStore;
 	ThePlayerTemplateStore->init();
 
-	// Turkiye's block as the master ships it, the fields the draw reads
-	std::string turkiye;
-	{
-		std::ifstream master( std::string( ZH_CODE_DIR ) + "/Data/INI/PlayerTemplateReforged.ini" );
-		CHECK( master.good() );
-		std::string line;
-		Bool inBlock = FALSE;
-		while( std::getline( master, line ) )
-		{
-			std::istringstream words( line );
-			std::string first, second;
-			words >> first >> second;
-			if( first == "PlayerTemplate" )
-				inBlock = second == "FactionTurkiye";
-			if( !inBlock )
-				continue;
-			if( first == "PlayerTemplate" || first == "Side" || first == "StartingBuilding" || first == "OldFaction" || first == "RandomExcluded" || first == "End" )
-				turkiye += line + "\n";
-			if( first == "End" )
-				inBlock = FALSE;
-		}
-	}
-	CHECK( turkiye.find( "RandomExcluded" ) != std::string::npos );
+	// a fifth faction of the test's own, kept out of a plain Random as a reserve army would be
+	const std::string reserve =
+		"PlayerTemplate FactionReserve\n  Side = Reserve\n  StartingBuilding = AmericaCommandCenter\n  RandomExcluded = Yes\nEnd\n";
+
 
 	std::string text =
 		"PlayerTemplate FactionObserver\n  Side = Observer\nEnd\n"
 		"PlayerTemplate FactionAmerica\n  Side = America\n  StartingBuilding = AmericaCommandCenter\n  OldFaction = Yes\nEnd\n"
 		"PlayerTemplate FactionAmericaAirForceGeneral\n  Side = AmericaAirForceGeneral\n  StartingBuilding = AirF_AmericaCommandCenter\nEnd\n"
 		"PlayerTemplate FactionChina\n  Side = China\n  StartingBuilding = ChinaCommandCenter\n  OldFaction = Yes\nEnd\n";
-	text += turkiye;
+	text += reserve;
 	writeFile( TEST_INI, text.c_str() );
 	CHECK( loadIni( TEST_INI ) );
 	CHECK_EQ( ThePlayerTemplateStore->getPlayerTemplateCount(), 5 );
 	CHECK( ThePlayerTemplateStore->getNthPlayerTemplate( 4 )->isRandomExcluded() );
 
-	// the observer has no command center, so the pool's bits are America, Air Force, China, Turkiye
+	// the observer has no command center, so the pool's bits are America, Air Force, China and Reserve
 	std::vector<Int> candidates;
 	GetRandomPoolCandidates( candidates );
 	const Int four[] = { 1, 2, 3, 4 };
 	CHECK( candidates == std::vector<Int>( four, four + 4 ) );
 	CHECK_EQ( GetDefaultRandomPool(), 0x7u );
 
-	// plain Random never lands on Turkiye, and the old-factions rule narrows it further
+	// plain Random never lands on Reserve, and the old-factions rule narrows it further
 	const Int three[] = { 1, 2, 3 };
 	const Int old[] = { 1, 3 };
 	CHECK( drawIs( PLAYERTEMPLATE_RANDOM, FALSE, std::vector<Int>( three, three + 3 ) ) );
@@ -7590,7 +7571,7 @@ TEST(random_pool_round_trips_and_plain_random_leaves_out_turkiye)
 	CHECK_EQ( EncodeRandomPool( 0 ), (Int)PLAYERTEMPLATE_RANDOM );
 	CHECK_EQ( DecodeRandomPool( PLAYERTEMPLATE_RANDOM ), 0x7u );
 
-	// America and Turkiye: the pick is a Random, a valid faction number, and gives the pool back
+	// America and Reserve: the pick is a Random, a valid faction number, and gives the pool back
 	const Int pick = EncodeRandomPool( 0x9 );
 	CHECK( pick < PLAYERTEMPLATE_RANDOM_POOL );
 	CHECK( IsRandomPlayerTemplate( pick ) );
@@ -7598,7 +7579,7 @@ TEST(random_pool_round_trips_and_plain_random_leaves_out_turkiye)
 	CHECK_EQ( DecodeRandomPool( pick ), 0x9u );
 	const Int ticked[] = { 1, 4 };
 	CHECK( drawIs( pick, FALSE, std::vector<Int>( ticked, ticked + 2 ) ) );
-	// Turkiye alone in a limited-armies game leaves nothing, so it draws as plain Random
+	// Reserve alone in a limited-armies game leaves nothing, so it draws as plain Random
 	CHECK( drawIs( EncodeRandomPool( 0x8 ), TRUE, std::vector<Int>( old, old + 2 ) ) );
 
 	// the widest pool still round-trips; one past it, and the unused negatives, are refused
@@ -7624,10 +7605,10 @@ TEST(random_pool_round_trips_and_plain_random_leaves_out_turkiye)
 	CHECK( !IsValidPlayerTemplatePick( PlayerTemplateFromSlotField( AsciiString( "PFFFFFFFF" ) ) ) );
 
 	// the preferences keep a pool by names, so a template added in front of them leaves the pool its armies
-	CHECK_STR( PlayerTemplatePreference( pick ).str(), "Random:FactionAmerica,FactionTurkiye" );
+	CHECK_STR( PlayerTemplatePreference( pick ).str(), "Random:FactionAmerica,FactionReserve" );
 	CHECK_STR( PlayerTemplatePreference( 2 ).str(), "2" );
 	CHECK_EQ( PlayerTemplateFromPreference( PlayerTemplatePreference( pick ) ), pick );
-	CHECK_EQ( PlayerTemplateFromPreference( AsciiString( "Random:FactionTurkiye,FactionGone" ) ), EncodeRandomPool( 0x8 ) );
+	CHECK_EQ( PlayerTemplateFromPreference( AsciiString( "Random:FactionReserve,FactionGone" ) ), EncodeRandomPool( 0x8 ) );
 	CHECK_EQ( PlayerTemplateFromPreference( AsciiString( "Random:FactionGone" ) ), (Int)PLAYERTEMPLATE_RANDOM );
 	CHECK_EQ( PlayerTemplateFromPreference( AsciiString( "3" ) ), 3 );
 	// a pool a build before the names wrote by number is dropped, its bits being anyone's now
@@ -18576,7 +18557,7 @@ TEST(lan_options_fit_eight_humans_on_a_generated_template_map)
 	CHECK_EQ( shortestHumanName( replay ), 12 );
 	CHECK( strstr( replay.str(), "M=00userdata/maps/rmg_v17_2147483647_8p_672c_tffffffff_bombardment beach;" ) != NULL );
 
-	// eight seats on a pool as wide as retail's armies and Turkiye (13 bits, "P1FFF") cost three bytes
+	// eight seats on a pool as wide as retail's armies and the fork's (13 bits, "P1FFF") cost three bytes
 	// a seat; a wider one that does not fit is turned back to Random by the host (LANAPI::OnGameOptions)
 	for( Int i = 0; i < MAX_SLOTS; ++i )
 		game.getSlot( i )->setPlayerTemplate( PLAYERTEMPLATE_RANDOM_POOL - 0x1FFF );
