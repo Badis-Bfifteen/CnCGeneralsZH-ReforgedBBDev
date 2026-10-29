@@ -165,8 +165,8 @@ TEST(rank_ladder_hero_insignia_runs_from_its_start_to_the_top)
 
 TEST(rank_ladder_perks_carry_up_and_the_strongest_of_a_kind_holds)
 {
-	/* Turkiye's Perk_ lines: sight 110%, 120%, 130% at 3, 8, 18; the rate-of-fire aura 10% at 16, and
-	   a 5% one at 10 as the Bascavus carried before auras moved above the Elite pin */
+	/* a 21-grade ladder's Perk_ lines: sight 110%, 120%, 130% at 3, 8, 18; the rate-of-fire aura 10% at
+	   16, and a 5% one at 10 as an older ladder carried before auras moved above the Elite pin */
 	RankLadder ladder;
 	ladder.clear();
 	ladder.m_grades = 21;

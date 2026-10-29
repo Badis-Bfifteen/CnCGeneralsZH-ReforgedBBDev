@@ -4187,7 +4187,6 @@ Tools/rank_insignia.py
 Tools/rank_insignia_cells.py
 Tools/rank_insignia_china.py
 Tools/rank_insignia_gla.py
-Tools/rank_insignia_turkiye.py
 Tools/rank_insignia_usa.py
 Tools/record-dx11-shaders.ps1
 Tools/replay-check.sh

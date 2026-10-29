@@ -2,8 +2,7 @@
 
 Reads the INIs the way the engine loads them: the retail archives in Run (Patch*.big over the rest,
 a loose file under Run over every archive), the fork's masters under Code/Data over both,
-BalanceReforged.ini then FixesReforged.ini patched over every Object, Weapon and Armor, and Turkiye's
-reskins (TurkiyeReforged.ini) and weapons (TurkiyeWeaponReforged.ini) after them. Each cell
+BalanceReforged.ini then FixesReforged.ini patched over every Object, Weapon and Armor. Each cell
 is the AI's own matchup arithmetic (AIPlayer.cpp shotPatternAgainst and computeTemplateFramesToKill,
 AI.cpp aiFramesToKill): best weapon of the unconditioned WeaponSet against the target's
 unconditioned ArmorSet and body MaxHealth, frames to kill both ways. The page divides the two and
@@ -76,14 +75,13 @@ VANILLA_SIDES = {
     "GLAToxinGeneral": ("GLA Toxin General", "GLA Toksin", "TKS"),
     "GLADemolitionGeneral": ("GLA Demolition General", "GLA Yıkım", "YKM"),
     "GLAStealthGeneral": ("GLA Stealth General", "GLA Gizlilik", "GZL"),
-    "Turkiye": ("Turkiye (Experimental)", "Türkiye", "TÜR"),
 }
-VANILLA_FACTIONS = {"usa": "ABD", "china": "Çin", "gla": "GLA", "turkiye": "Türkiye"}
-# a side that is a faction of its own on the page although its BaseSide names another one: Turkiye says
-# USA so the AI runs the American scripts, and it is the fork's fourth faction, not a US general
-OWN_FACTION_SIDES = {"Turkiye"}
-# GameEngine::init: Balance and Fixes over EA's objects, then Turkiye's reskins of what they left
-PATCH_FILES = ("Data/INI/BalanceReforged.ini", "Data/INI/FixesReforged.ini", "Data/INI/TurkiyeReforged.ini")
+VANILLA_FACTIONS = {"usa": "ABD", "china": "Çin", "gla": "GLA"}
+# a side that is a faction of its own on the page although its BaseSide names another one (empty: the
+# fork ships no such side now, but a mod mounted with --mod can still bring one)
+OWN_FACTION_SIDES = set()
+# GameEngine::init: Balance and Fixes over EA's objects
+PATCH_FILES = ("Data/INI/BalanceReforged.ini", "Data/INI/FixesReforged.ini")
 # Object::look: a unit sees no further than half as far again as its longest weapon reaches
 SIGHT_PER_WEAPON_RANGE = 1.5
 MODS_DIR = Path(os.environ.get("ZH_USER_DATA_DIR", Path.home() / "Documents" / "Command and Conquer Generals Zero Hour Data")) / "Mods"
@@ -319,7 +317,7 @@ class Thing:
         self.cost = 0.0
         self.display = ""
         self.locomotor = None
-        self.speed_scale = 1.0              # SpeedScale: Turkiye's speeds on the American locomotors
+        self.speed_scale = 1.0              # SpeedScale, which the engine no longer reads: stays 1.0
         self.sight = 0.0                    # ShroudClearingRange, before Object::look caps it
         self.spotter = False                # SpotterSight: the cap does not apply
         self.beyond_vision = False          # AcquiresBeyondVision: picks targets out to its range from what the team sees
