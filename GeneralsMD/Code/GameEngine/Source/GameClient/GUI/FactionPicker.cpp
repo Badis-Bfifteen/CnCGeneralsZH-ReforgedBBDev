@@ -69,7 +69,6 @@ static const Real TAB_HEIGHT = 44.0f;
 static const Real TAB_GAP = 12.0f;
 static const Real GRID_TOP = 232.0f;
 static const Real GRID_BOTTOM = 916.0f;
-static const Real NAV_HEIGHT = 34.0f;		// the pager's strip under the grid
 static const Real HEADING_HEIGHT = 34.0f;
 static const Real GROUP_GAP = 10.0f;
 static const Real CELL = 112.0f;
@@ -98,14 +97,6 @@ struct PickerCell
 	IRegion2D box;
 };
 
-struct PickerPageBlock
-{
-	Int group;		///< the group it belongs to
-	Int first;		///< its first cell within the group
-	Int count;		///< the cells it shows on this page
-	Int rows;
-};
-
 struct PickerGroup
 {
 	AsciiString leadSide;
@@ -128,9 +119,6 @@ static GameWindow *s_combo = NULL;
 static GameWindow *s_oldFocus = NULL;
 static std::vector<PickerCell> s_cells;
 static std::vector<PickerGroup> s_groups;
-static std::vector<std::vector<PickerPageBlock> > s_pages;
-static Int s_page = 0;
-static std::vector<Bool> s_shown;		///< whether the current page shows the cell
 static Int s_focus = -1;					///< a cell, or -1 for Random
 static Bool s_custom = FALSE;
 static UnsignedInt s_mask = 0;
@@ -145,11 +133,9 @@ static DisplayString *s_confirmText = NULL;
 static DisplayString *s_nameText = NULL;
 static DisplayString *s_strategyText = NULL;
 static DisplayString *s_randomMark = NULL;
-static std::vector<DisplayString *> s_pageNumbers;	///< the number in each page tab
 static std::vector<DisplayString *> s_featureText;
 
 static IRegion2D s_panelBox, s_tabBox[ 2 ], s_backBox, s_confirmBox, s_portraitBox, s_bannerBox, s_descriptionBox;
-static std::vector<IRegion2D> s_pageTabs;	///< one per page, under the grid, the open one lit
 
 //-------------------------------------------------------------------------------------------------
 static DisplayString *newText( const UnicodeString &text, GameFont *font )
@@ -277,8 +263,6 @@ static Int cellAt( Int x, Int y )
 {
 	for( size_t each = 0; each < s_cells.size(); each++ )
 	{
-		if( each < s_shown.size() && !s_shown[ each ] )
-			continue;
 		if( isInside( s_cells[ each ].box, x, y ) )
 			return (Int)each;
 	}
@@ -405,102 +389,34 @@ static void buildCells( void )
 	}
 }
 
-//-------------------------------------------------------------------------------------------------
-/// how many cells go across the grid at the full cell size
-static Int gridColumns( void )
+/** Places everything; the cells shrink until every group fits above the button row. */
+static void layout( void )
 {
-	return max( 1, (Int)( ( GRID_RIGHT - LEFT + CELL_GAP ) / ( CELL + CELL_GAP ) ) );
-}
+	s_panelBox = boardBox( UIStyle::ROOM_PANEL_LEFT, UIStyle::ROOM_PANEL_TOP, UIStyle::ROOM_PANEL_RIGHT, UIStyle::ROOM_PANEL_BOTTOM );
+	const Real tabWidth = ( GRID_RIGHT - LEFT - TAB_GAP ) / 2;
+	s_tabBox[ 0 ] = boardBox( LEFT, TOP, LEFT + tabWidth, TOP + TAB_HEIGHT );
+	s_tabBox[ 1 ] = boardBox( GRID_RIGHT - tabWidth, TOP, GRID_RIGHT, TOP + TAB_HEIGHT );
 
-/** Splits the armies into pages: a group that does not fit where the page has got to starts the
-	* next one, and a group too tall for a page alone is cut across two of them. */
-static void paginate( Real available )
-{
-	s_pages.clear();
-	const Int columns = gridColumns();
-	const Real rowHeight = CELL + CELL_GAP;
-
-	std::vector<PickerPageBlock> page;
-	Real used = 0;
-	for( size_t group = 0; group < s_groups.size(); group++ )
+	Real cell = CELL;
+	Int columns = 1;
+	for( ;; )
 	{
-		const Int total = (Int)s_groups[ group ].cells.size();
-		Int first = 0;
-		while( first < total )
+		columns = max( 1, (Int)( ( GRID_RIGHT - LEFT + CELL_GAP ) / ( cell + CELL_GAP ) ) );
+		Real height = 0;
+		for( size_t group = 0; group < s_groups.size(); group++ )
 		{
-			const Int rowsLeft = ( total - first + columns - 1 ) / columns;
-			Int rowsHere = (Int)( ( available - used - HEADING_HEIGHT - GROUP_GAP ) / rowHeight );
-			if( rowsHere < 1 )
-			{
-				if( !page.empty() )
-				{
-					s_pages.push_back( page );
-					page.clear();
-					used = 0;
-					continue;
-				}
-				rowsHere = 1;		// a page that cannot hold one row would never end
-			}
-			rowsHere = min( rowsHere, rowsLeft );
-			PickerPageBlock block;
-			block.group = (Int)group;
-			block.first = first;
-			block.count = min( total - first, rowsHere * columns );
-			block.rows = ( block.count + columns - 1 ) / columns;
-			page.push_back( block );
-			used += HEADING_HEIGHT + block.rows * rowHeight + GROUP_GAP;
-			first += block.count;
+			const Int rows = ( (Int)s_groups[ group ].cells.size() + columns - 1 ) / columns;
+			height += HEADING_HEIGHT + rows * ( cell + CELL_GAP ) + GROUP_GAP;
 		}
-	}
-	if( !page.empty() )
-		s_pages.push_back( page );
-	if( s_pages.empty() )
-		s_pages.push_back( std::vector<PickerPageBlock>() );
-}
-
-/// the page a cell is on, 0 when the screen does not show it
-static Int pageOfCell( Int cell )
-{
-	for( size_t p = 0; p < s_pages.size(); p++ )
-	{
-		for( size_t n = 0; n < s_pages[ p ].size(); n++ )
-		{
-			const PickerPageBlock &block = s_pages[ p ][ n ];
-			const std::vector<Int> &cells = s_groups[ block.group ].cells;
-			for( Int each = 0; each < block.count; each++ )
-			{
-				if( cells[ block.first + each ] == cell )
-					return (Int)p;
-			}
-		}
-	}
-	return 0;
-}
-
-/** Places the current page's headings and cells, and leaves every other cell with no box, so a
-	* click can only land on what the screen shows. */
-static void placePage( void )
-{
-	const Int columns = gridColumns();
-	s_shown.assign( s_cells.size(), FALSE );
-	for( size_t each = 0; each < s_cells.size(); each++ )
-	{
-		s_cells[ each ].box.lo.x = s_cells[ each ].box.lo.y = 0;
-		s_cells[ each ].box.hi.x = s_cells[ each ].box.hi.y = 0;
-	}
-	for( size_t group = 0; group < s_groups.size(); group++ )
-	{
-		s_groups[ group ].nameBox.lo.x = s_groups[ group ].nameBox.lo.y = 0;
-		s_groups[ group ].nameBox.hi.x = s_groups[ group ].nameBox.hi.y = 0;
-		s_groups[ group ].tickBox = s_groups[ group ].nameBox;
+		if( height <= GRID_BOTTOM - GRID_TOP || cell <= 40.0f )
+			break;
+		cell -= 8.0f;
 	}
 
 	Real y = GRID_TOP;
-	const std::vector<PickerPageBlock> &page = s_pages[ s_page ];
-	for( size_t n = 0; n < page.size(); n++ )
+	for( size_t group = 0; group < s_groups.size(); group++ )
 	{
-		const PickerPageBlock &block = page[ n ];
-		PickerGroup &g = s_groups[ block.group ];
+		PickerGroup &g = s_groups[ group ];
 		g.at.x = UIStyle::boardX( LEFT );
 		g.at.y = UIStyle::boardY( y );
 		Int nameWidth, nameHeight;
@@ -514,74 +430,17 @@ static void placePage( void )
 		g.tickBox.hi.x = g.tickBox.lo.x + tick;
 		g.tickBox.hi.y = g.tickBox.lo.y + tick;
 		y += HEADING_HEIGHT;
-		for( Int each = 0; each < block.count; each++ )
+		for( size_t each = 0; each < g.cells.size(); each++ )
 		{
-			const Real x = LEFT + ( each % columns ) * ( CELL + CELL_GAP );
-			const Real top = y + ( each / columns ) * ( CELL + CELL_GAP );
-			const Int index = g.cells[ block.first + each ];
-			PickerCell &c = s_cells[ index ];
-			c.box = boardBox( x, top, x + CELL, top + CELL );
+			const Real x = LEFT + ( each % columns ) * ( cell + CELL_GAP );
+			const Real top = y + ( each / columns ) * ( cell + CELL_GAP );
+			PickerCell &c = s_cells[ g.cells[ each ] ];
+			c.box = boardBox( x, top, x + cell, top + cell );
 			if( c.label )
 				c.label->setWordWrap( boxWidth( c.box ) - UIStyle::px( 8 ) );
-			s_shown[ index ] = TRUE;
 		}
-		y += block.rows * ( CELL + CELL_GAP ) + GROUP_GAP;
+		y += ( ( (Int)g.cells.size() + columns - 1 ) / columns ) * ( cell + CELL_GAP ) + GROUP_GAP;
 	}
-
-	// the pager: a small tab per page, in the same style as the screen's own tabs, under the grid
-	const Real navTop = GRID_BOTTOM - NAV_HEIGHT;
-	const Real tabHeight = NAV_HEIGHT - 8;
-	for( size_t each = 0; each < s_pageNumbers.size(); each++ )
-		freeText( s_pageNumbers[ each ] );
-	s_pageNumbers.clear();
-	s_pageTabs.clear();
-	if( s_pages.size() > 1 )
-	{
-		// a page count wide enough to run past the grid narrows its tabs rather than overflow
-		const Real room = ( GRID_RIGHT - LEFT - 8.0f * ( (Real)s_pages.size() - 1 ) ) / (Real)s_pages.size();
-		Real x = LEFT;
-		for( size_t page = 0; page < s_pages.size(); page++ )
-		{
-			UnicodeString label;
-			label.format( u"%d", (Int)page + 1 );
-			DisplayString *number = newText( label, UIStyle::titleFont( UIStyle::TEXT_HEADING ) );
-			Int width, height;
-			number->getSize( &width, &height );
-			const Real tabWidth = max( 18.0f, min( max( tabHeight, (Real)width + UIStyle::px( 16 ) ), room ) );
-			s_pageTabs.push_back( boardBox( x, navTop, x + tabWidth, navTop + tabHeight ) );
-			s_pageNumbers.push_back( number );
-			x += tabWidth + 8.0f;
-		}
-	}
-}
-
-static void goToPage( Int page )
-{
-	const Int count = (Int)s_pages.size();
-	if( count <= 1 )
-		return;
-	page = max( 0, min( count - 1, page ) );
-	if( page == s_page )
-		return;
-	s_page = page;
-	s_lastPressCell = -1;
-	placePage();
-}
-
-/** Places everything; the armies that do not fit under the grid's top go on another page. */
-static void layout( void )
-{
-	s_panelBox = boardBox( UIStyle::ROOM_PANEL_LEFT, UIStyle::ROOM_PANEL_TOP, UIStyle::ROOM_PANEL_RIGHT, UIStyle::ROOM_PANEL_BOTTOM );
-	const Real tabWidth = ( GRID_RIGHT - LEFT - TAB_GAP ) / 2;
-	s_tabBox[ 0 ] = boardBox( LEFT, TOP, LEFT + tabWidth, TOP + TAB_HEIGHT );
-	s_tabBox[ 1 ] = boardBox( GRID_RIGHT - tabWidth, TOP, GRID_RIGHT, TOP + TAB_HEIGHT );
-
-	// one page takes the whole grid; the pager's strip is only given up when there is a pager
-	paginate( GRID_BOTTOM - GRID_TOP );
-	if( s_pages.size() > 1 )
-		paginate( GRID_BOTTOM - NAV_HEIGHT - GRID_TOP );
-	s_page = max( 0, min( (Int)s_pages.size() - 1, s_page ) );
-	placePage();
 
 	s_portraitBox = boardBox( DETAIL_LEFT, TOP, RIGHT, PORTRAIT_BOTTOM );
 	s_bannerBox = boardBox( DETAIL_LEFT, PORTRAIT_BOTTOM + 8.0f, RIGHT, BANNER_BOTTOM );
@@ -752,11 +611,10 @@ static void drawPicker( GameWindow *window, WinInstanceData *instData )
 	}
 
 	const ICoord2D mouse = TheMouse->getMouseStatus()->pos;
-	const std::vector<PickerPageBlock> &page = s_pages[ s_page ];
-	for( size_t n = 0; n < page.size(); n++ )
+	for( size_t group = 0; group < s_groups.size(); group++ )
 	{
 		// the name is a button (that side alone), lit under the mouse; the box is Custom Selection's
-		const PickerGroup &g = s_groups[ page[ n ].group ];
+		const PickerGroup &g = s_groups[ group ];
 		const Bool narrows = g.mask != 0;
 		const Bool hovered = narrows && isInside( g.nameBox, mouse.x, mouse.y );
 		g.heading->draw( g.at.x, g.at.y, hovered ? UIStyle::EDGE_LIT : UIStyle::ACTIVE, UIStyle::SHADOW );
@@ -765,8 +623,6 @@ static void drawPicker( GameWindow *window, WinInstanceData *instData )
 	}
 	for( size_t each = 0; each < s_cells.size(); each++ )
 	{
-		if( each >= s_shown.size() || !s_shown[ each ] )
-			continue;
 		const PickerCell &cell = s_cells[ each ];
 		const IRegion2D &box = cell.box;
 		UIStyle::panel( box.lo.x, box.lo.y, boxWidth( box ), boxHeight( box ), UIStyle::CARD );
@@ -788,14 +644,6 @@ static void drawPicker( GameWindow *window, WinInstanceData *instData )
 			UIStyle::edge( box.lo.x, box.lo.y, boxWidth( box ), boxHeight( box ) );
 		else if( isInside( box, mouse.x, mouse.y ) )
 			TheDisplay->drawOpenRect( box.lo.x, box.lo.y, boxWidth( box ), boxHeight( box ), 1.0f, UIStyle::EDGE_LIT );
-	}
-
-	for( size_t each = 0; each < s_pageTabs.size(); each++ )
-	{
-		// the armies that did not fit are one click away; the open page's tab reads as open
-		const IRegion2D &box = s_pageTabs[ each ];
-		UIStyle::tab( box.lo.x, box.lo.y, boxWidth( box ), boxHeight( box ) );
-		drawCentred( s_pageNumbers[ each ], box, (Int)each == s_page ? UIStyle::ACTIVE : UIStyle::INK );
 	}
 
 	UIStyle::panel( s_portraitBox.lo.x, s_portraitBox.lo.y, boxWidth( s_portraitBox ), boxHeight( s_portraitBox ), UIStyle::CARD );
@@ -868,13 +716,6 @@ static void closePicker( Bool restoreFocus )
 	freeText( s_nameText );
 	freeText( s_strategyText );
 	freeText( s_randomMark );
-	for( size_t each = 0; each < s_pageNumbers.size(); each++ )
-		freeText( s_pageNumbers[ each ] );
-	s_pageNumbers.clear();
-	s_pageTabs.clear();
-	s_shown.clear();
-	s_pages.clear();
-	s_page = 0;
 	s_leftOut.clear();
 }
 
@@ -915,15 +756,6 @@ static void narrowToSide( Int side )
 
 static void pressAt( Int x, Int y )
 {
-	for( size_t each = 0; each < s_pageTabs.size(); each++ )
-	{
-		if( isInside( s_pageTabs[ each ], x, y ) )
-		{
-			click();
-			goToPage( (Int)each );
-			return;
-		}
-	}
 	if( isInside( s_backBox, x, y ) )
 	{
 		click();
@@ -1012,17 +844,7 @@ static WindowMsgHandledType pickerInput( GameWindow *window, UnsignedInt msg, Wi
 					closePicker( TRUE );
 				else if( mData1 == KEY_ENTER || mData1 == KEY_KPENTER )
 					confirm();
-				else if( mData1 == KEY_LEFT || mData1 == KEY_PGUP )
-					goToPage( s_page - 1 );
-				else if( mData1 == KEY_RIGHT || mData1 == KEY_PGDN )
-					goToPage( s_page + 1 );
 			}
-			break;
-		case GWM_WHEEL_UP:
-			goToPage( s_page - 1 );
-			break;
-		case GWM_WHEEL_DOWN:
-			goToPage( s_page + 1 );
 			break;
 		case GWM_LEFT_UP:
 			releaseAt( x, y );
@@ -1081,18 +903,7 @@ static void openPicker( GameWindow *combo )
 	s_nameText = newText( UnicodeString::TheEmptyString, UIStyle::titleFont( UIStyle::TEXT_TITLE ) );
 	s_strategyText = newText( UnicodeString::TheEmptyString, UIStyle::font( UIStyle::TEXT_STRONG ) );
 	s_randomMark = newText( UnicodeString( u"?" ), UIStyle::titleFont( UIStyle::TEXT_DISPLAY ) );
-	s_page = 0;
 	layout();
-	// open on the page the seat's army is on, so the pick in force is on screen
-	if( s_focus >= 0 )
-	{
-		const Int page = pageOfCell( s_focus );
-		if( page != s_page )
-		{
-			s_page = page;
-			placePage();
-		}
-	}
 	s_strategyText->setWordWrap( boxWidth( s_descriptionBox ) - UIStyle::px( 2 * PAD ) );
 	refresh();
 
